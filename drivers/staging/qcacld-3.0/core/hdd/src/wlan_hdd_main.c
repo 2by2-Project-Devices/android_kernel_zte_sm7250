@@ -225,6 +225,11 @@
 #define TSO_FEATURE_FLAGS 0
 #endif
 
+#define WLAN_ADDR_SIZE 6
+#define PERSIST_MAC_FILE_PATH "/mnt/vendor/persist/wifimac.dat"
+#define PERSIST_MAC_FILE_HEAD "wifiaddr:"
+#define PERSIST_MAC_FILE_MAX_LEN  60
+
 int wlan_start_ret_val;
 static DECLARE_COMPLETION(wlan_start_comp);
 static qdf_atomic_t wlan_hdd_state_fops_ref;
@@ -12564,6 +12569,54 @@ void hdd_populate_random_mac_addr(struct hdd_context *hdd_ctx, uint32_t num)
 	}
 }
 
+static bool hdd_get_persist_wlan_mac_addr(struct qdf_mac_addr *mac)
+{
+	struct file *fp;
+	char buf[PERSIST_MAC_FILE_MAX_LEN] = {0};
+	unsigned int wifi_addr[WLAN_ADDR_SIZE] = {0};
+	loff_t pos = 0;
+	ssize_t ret;
+	int i;
+
+	if (!mac)
+		return false;
+
+	fp = filp_open(PERSIST_MAC_FILE_PATH, O_RDONLY, 0);
+	if (IS_ERR(fp)) {
+		hdd_debug("wlan: Openning file %s failed.", PERSIST_MAC_FILE_PATH);
+		return false;
+	}
+
+	ret = kernel_read(fp, buf, sizeof(buf), &pos);
+	filp_close(fp, NULL);
+
+	if (ret <= 0 || !strstr(buf, PERSIST_MAC_FILE_HEAD)) {
+		hdd_err("wlan: Contents of %s is invalid.", buf);
+		return false;
+	}
+
+	if (sscanf(buf, "wifiaddr: 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x",
+			&wifi_addr[0], &wifi_addr[1], &wifi_addr[2],
+			&wifi_addr[3], &wifi_addr[4], &wifi_addr[5]) != 6) {
+		hdd_err("wlan: Invalid wifi address.");
+		return false;
+	}
+
+	for (i = 0; i < WLAN_ADDR_SIZE; i++)
+		mac->bytes[i] = (uint8_t)wifi_addr[i];
+
+	hdd_info("wlan: persist MAC addr: %02x:%02x:%02x:%02x:%02x:%02x",
+			mac->bytes[0], mac->bytes[1], mac->bytes[2],
+			mac->bytes[3], mac->bytes[4], mac->bytes[5]);
+
+	if (mac->bytes[0] & 0x01) {
+		hdd_err("wlan: Invalid MAC address.");
+		return false;
+	}
+
+	return true;
+}
+
 /**
  * hdd_platform_wlan_mac() - API to get mac addresses from platform driver
  * @hdd_ctx: HDD Context
@@ -12684,6 +12737,13 @@ static int hdd_initialize_mac_address(struct hdd_context *hdd_ctx)
 	QDF_STATUS status;
 	int ret;
 	bool update_mac_addr_to_fw = true;
+	struct qdf_mac_addr persist_mac;
+
+	if (hdd_get_persist_wlan_mac_addr(&persist_mac)) {
+		hdd_info("Using MAC address from persist MAC addr");
+		hdd_update_macaddr(hdd_ctx, persist_mac, false);
+		return 0;
+	}
 
 	ret = hdd_platform_wlan_mac(hdd_ctx);
 	if (!ret) {
