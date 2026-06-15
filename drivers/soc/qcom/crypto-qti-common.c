@@ -204,7 +204,7 @@ int crypto_qti_resume(void *priv_data)
 	ice_entry = (struct crypto_vops_qti_entry *) priv_data;
 	if (!ice_entry) {
 		pr_err("%s: vops ice data is invalid\n", __func__);
-		return -EINVAL;
+		return 0;
 	}
 
 	err = ice_wait_bist_status(ice_entry);
