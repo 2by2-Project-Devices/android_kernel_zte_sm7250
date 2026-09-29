@@ -44,7 +44,7 @@
 #ifdef CONFIG_HAS_EARLYSUSPEND
 #include <linux/earlysuspend.h>
 #endif
-#ifdef CONFIG_FB
+#if defined(CONFIG_FB) || defined(CONFIG_DRM_PANEL_NOTIFIER)
 #include <linux/notifier.h>
 #include <linux/fb.h>
 #endif
@@ -489,7 +489,7 @@ struct goodix_ts_core {
 	struct notifier_block ts_notifier;
 	struct goodix_ts_esd ts_esd;
 
-#ifdef CONFIG_FB
+#if defined(CONFIG_FB) || defined(CONFIG_DRM_PANEL_NOTIFIER)
 	struct notifier_block fb_notifier;
 #elif defined(CONFIG_HAS_EARLYSUSPEND)
 	struct early_suspend early_suspend;

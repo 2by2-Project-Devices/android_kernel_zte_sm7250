@@ -2418,7 +2418,7 @@ int __goodix_set_edge_suppress(int *cmd_start, struct goodix_ts_core *core_data)
 static int goodix_set_edge_suppress(int level, int is_hor, void *priv_data)
 {
 	int ret = -1;
-	static in_hor = 1;
+	static int in_hor = 1;
 	struct goodix_ts_core *core_data = priv_data;
 	struct goodix_ts_board_data *ts_bdata = board_data(core_data);
 
