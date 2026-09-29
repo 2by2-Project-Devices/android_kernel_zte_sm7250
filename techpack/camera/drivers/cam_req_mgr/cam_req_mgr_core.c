@@ -3983,7 +3983,6 @@ int cam_req_mgr_link_control(struct cam_req_mgr_link_control *control)
 
 	struct cam_req_mgr_connected_device *dev = NULL;
 	struct cam_req_mgr_link_evt_data     evt_data;
-	int                                init_timeout = 0;
 
 	if (!control) {
 		CAM_ERR(CAM_CRM, "Control command is NULL");
@@ -4017,12 +4016,9 @@ int cam_req_mgr_link_control(struct cam_req_mgr_link_control *control)
 			spin_lock_bh(&link->link_state_spin_lock);
 			link->state = CAM_CRM_LINK_STATE_READY;
 			spin_unlock_bh(&link->link_state_spin_lock);
-			if (control->init_timeout[i])
-				link->skip_wd_validation = true;
-			init_timeout = (2 * control->init_timeout[i]);
 			/* Start SOF watchdog timer */
 			rc = crm_timer_init(&link->watchdog,
-				(init_timeout + CAM_REQ_MGR_WATCHDOG_TIMEOUT),
+				CAM_REQ_MGR_WATCHDOG_TIMEOUT,
 				link, &__cam_req_mgr_sof_freeze);
 			if (rc < 0) {
 				CAM_ERR(CAM_CRM,
