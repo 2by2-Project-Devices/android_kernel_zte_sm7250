@@ -70,3 +70,5 @@ config NFC_NQ
 
 # Add by zte for nfc chip st54j.
 source "drivers/nfc/st54j/Kconfig"
+
+source "drivers/nfc/cxd22xx/Kconfig"
