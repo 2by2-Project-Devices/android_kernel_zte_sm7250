@@ -2,4 +2,6 @@ menu "Tech packages"
 
 source "techpack/data/Kconfig"
 
+source "techpack/zte-zr01/Kconfig"
+
 endmenu

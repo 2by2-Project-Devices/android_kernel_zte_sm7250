@@ -1,0 +1,12 @@
+menu "ZTE ZR01 project"
+	depends on ARCH_LITO
+
+config MACH_ZTE_ZR01
+	bool "Support for ZTE ZR01 project"
+	help
+	  Say Y here to enable support for ZTE ZR01 project.
+
+if MACH_ZTE_ZR01
+endif # MACH_ZTE_ZR01
+
+endmenu
